@@ -1,0 +1,17 @@
+---
+version: "3.7"
+
+services:
+  wg-server:
+    image: local/wg-server
+    build: ./wg-server
+    container_name: wg-server
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    restart: unless-stopped
+    sysctls:
+      - net.ipv4.ip_forward=1
+    logging:
+      driver: json-file
+    init: true

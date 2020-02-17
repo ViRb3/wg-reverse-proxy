@@ -1,0 +1,91 @@
+---
+- hosts: proxy
+
+  tasks:
+    - name: Check if Docker and docker-compose already exist
+      shell: which docker && which docker-compose
+      register: docker_exists
+      failed_when: no
+
+    - name: Install Docker and docker-compose
+      include_role:
+        name: geerlingguy.docker
+      vars:
+        ansible_become: yes
+        # eoan is not supported yet, so use bionic as workaround
+        docker_apt_repository: "deb [arch={{ docker_apt_arch }}] https://download.docker.com/linux/ubuntu bionic {{ docker_apt_release_channel }}"
+      when:
+        - docker_exists.rc != 0
+
+    - name: Add WireGuard APT repository
+      apt_repository:
+        repo: ppa:wireguard/wireguard
+
+    - name: Install WireGuard and UFW
+      apt:
+        name: wireguard,ufw
+        state: present
+
+    - name: Generate WireGuard keys
+      block:
+        - shell: wg genkey
+          register: ctf_wg_server_privkey
+        - shell: echo {{ ctf_wg_server_privkey.stdout }} | wg pubkey
+          register: ctf_wg_server_pubkey
+        - shell: wg genkey
+          register: ctf_wg_client_privkey
+        - shell: echo {{ ctf_wg_client_privkey.stdout }} | wg pubkey
+          register: ctf_wg_client_pubkey
+        - set_fact:
+            ctf_wg_server_privkey: "{{ ctf_wg_server_privkey.stdout }}"
+            ctf_wg_server_pubkey: "{{ ctf_wg_server_pubkey.stdout }}"
+            ctf_wg_client_privkey: "{{ ctf_wg_client_privkey.stdout }}"
+            ctf_wg_client_pubkey: "{{ ctf_wg_client_pubkey.stdout }}"
+
+    - name: UFW allow SSH
+      become: yes
+      ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+
+    - name: UFW enable and deny incoming by default
+      become: yes
+      ufw:
+        state: enabled
+        default: deny
+        direction: incoming
+
+    - name: Create WireGuard configuration directory
+      file:
+        path: wireguard/
+        state: directory
+        mode: "0755"
+
+    - name: Copy WireGuard configuration
+      synchronize:
+        src: docker/
+        dest: wireguard/
+        delete: yes
+        perms: no
+
+    - name: Update WireGuard configuration
+      template:
+        src: docker/{{ item }}
+        dest: wireguard/{{ item }}
+      loop:
+        - wg-server/wg-server.conf
+        - wg-server/start.sh
+        - wg-server/Dockerfile
+
+    - name: Run docker-compose
+      command:
+        cmd: docker-compose up -d --build
+        chdir: wireguard/
+      become: yes
+
+    - name: Generate client profile in "wg-client.conf"
+      delegate_to: "localhost"
+      template:
+        src: templates/wg-client.conf
+        dest: wg-client.conf
