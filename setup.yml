@@ -26,22 +26,6 @@
         name: wireguard,ufw
         state: present
 
-    - name: Generate WireGuard keys
-      block:
-        - shell: wg genkey
-          register: ctf_wg_server_privkey
-        - shell: echo {{ ctf_wg_server_privkey.stdout }} | wg pubkey
-          register: ctf_wg_server_pubkey
-        - shell: wg genkey
-          register: ctf_wg_client_privkey
-        - shell: echo {{ ctf_wg_client_privkey.stdout }} | wg pubkey
-          register: ctf_wg_client_pubkey
-        - set_fact:
-            ctf_wg_server_privkey: "{{ ctf_wg_server_privkey.stdout }}"
-            ctf_wg_server_pubkey: "{{ ctf_wg_server_pubkey.stdout }}"
-            ctf_wg_client_privkey: "{{ ctf_wg_client_privkey.stdout }}"
-            ctf_wg_client_pubkey: "{{ ctf_wg_client_pubkey.stdout }}"
-
     - name: UFW allow SSH
       become: yes
       ufw:
@@ -56,27 +40,49 @@
         default: deny
         direction: incoming
 
-    - name: Create WireGuard configuration directory
+    - name: Create project directory
       file:
         path: wireguard/
         state: directory
         mode: "0755"
 
-    - name: Copy WireGuard configuration
-      synchronize:
-        src: docker/
-        dest: wireguard/
-        delete: yes
-        perms: no
+    - name: Check if WireGuard profile already created
+      stat:
+        path: wireguard/wg-server.conf
+      register: wg_status
 
-    - name: Update WireGuard configuration
+    - name: Create WireGuard profile
+      when: not wg_status.stat.exists
+      block:
+        - name: Generate WireGuard keys
+          block:
+            - shell: wg genkey
+              register: ctf_wg_server_privkey
+            - shell: echo {{ ctf_wg_server_privkey.stdout }} | wg pubkey
+              register: ctf_wg_server_pubkey
+            - shell: wg genkey
+              register: ctf_wg_client_privkey
+            - shell: echo {{ ctf_wg_client_privkey.stdout }} | wg pubkey
+              register: ctf_wg_client_pubkey
+            - set_fact:
+                ctf_wg_server_privkey: "{{ ctf_wg_server_privkey.stdout }}"
+                ctf_wg_server_pubkey: "{{ ctf_wg_server_pubkey.stdout }}"
+                ctf_wg_client_privkey: "{{ ctf_wg_client_privkey.stdout }}"
+                ctf_wg_client_pubkey: "{{ ctf_wg_client_pubkey.stdout }}"
+
+        - name: Update profile
+          template:
+            src: docker/wg-server.conf
+            dest: wireguard/wg-server.conf
+
+    - name: Update Docker configuration
       template:
         src: docker/{{ item }}
         dest: wireguard/{{ item }}
       loop:
-        - wg-server/wg-server.conf
-        - wg-server/start.sh
-        - wg-server/Dockerfile
+        - start.sh
+        - Dockerfile
+        - docker-compose.yml
 
     - name: Run docker-compose
       command:
@@ -86,6 +92,7 @@
 
     - name: Generate client profile in "wg-client.conf"
       delegate_to: "localhost"
+      when: not wg_status.stat.exists
       template:
         src: templates/wg-client.conf
         dest: wg-client.conf

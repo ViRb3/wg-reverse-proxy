@@ -4,7 +4,7 @@ version: "3.7"
 services:
   wg-server:
     image: local/wg-server
-    build: ./wg-server
+    build: "."
     container_name: wg-server
     cap_add:
       - NET_ADMIN
