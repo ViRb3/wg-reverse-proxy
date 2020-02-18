@@ -1,9 +1,9 @@
 # WireGuard Reverse Proxy Server
-Ansible setup to build a WireGuard reverse proxy server that will allow any machine to reach the client by forwarding packets over the VPN network.
+[Ansible](https://www.ansible.com/) setup to build a [WireGuard](https://www.wireguard.com/)-powered [reverse proxy](https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/) server that will allow any machine to reach the client by forwarding packets over the [VPN](https://en.wikipedia.org/wiki/Virtual_private_network) network.
 
 ## Use Cases
-- One static IP to reach you, no matter where you are
-- Accept incoming connections through firewalls
+- The same static IP to reach you, no matter where you are
+- Accept incoming connections through any firewall
 - Painless reverse shells in [CTF](https://ctf101.org/) competitions
 
 ## Usage
