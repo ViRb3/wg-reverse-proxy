@@ -21,6 +21,7 @@ Edit [inventory.ini](inventory.ini) with your desired setup:
   - The VPN subnet
 
 If you want to use your own keys, add them to the `ctf_wg_server_*` variables.
+Otherwise, leave them empty and the Ansible script will generate new ones for you.
 
 Then, execute the playbook:
 ```bash
