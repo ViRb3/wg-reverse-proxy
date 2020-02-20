@@ -30,7 +30,7 @@
       become: yes
       ufw:
         rule: allow
-        port: "22"
+        port: ssh
         proto: tcp
 
     - name: UFW enable and deny incoming by default
