@@ -10,13 +10,13 @@ function setup_iptables() {
    iptables -t filter $1 INPUT -p tcp -m multiport --dports {{ ctf_reverse_ports | join(',') }} -j ACCEPT
    iptables -t filter $1 INPUT -p udp -m multiport --dports {{ ctf_reverse_ports | join(',') }} -j ACCEPT
    # forward the to-be-forwarded traffic
-   iptables -t nat $1 PREROUTING -p tcp -m conntrack --ctstate NEW -m multiport --dports {{ ctf_reverse_ports | join(',') }} -j DNAT --to-destination 10.8.0.100
-   iptables -t nat $1 PREROUTING -p udp -m conntrack --ctstate NEW -m multiport --dports {{ ctf_reverse_ports | join(',') }} -j DNAT --to-destination 10.8.0.100
+   iptables -t nat $1 PREROUTING -p tcp -m conntrack --ctstate NEW -m multiport --dports {{ ctf_reverse_ports | join(',') }} -j DNAT --to-destination {{ ctf_client_ip }}
+   iptables -t nat $1 PREROUTING -p udp -m conntrack --ctstate NEW -m multiport --dports {{ ctf_reverse_ports | join(',') }} -j DNAT --to-destination {{ ctf_client_ip }}
    # ensure forwarding
    iptables $1 FORWARD -o wg-server -j ACCEPT
    iptables $1 FORWARD -i wg-server -j ACCEPT
    # ensure all connections happen through this server, not directly
-   iptables -t nat $1 POSTROUTING -d 10.8.0.0/24 -j MASQUERADE
+   iptables -t nat $1 POSTROUTING -d {{ ctf_subnet }} -j MASQUERADE
    echo "Done applying iptable rules"
 }
 
