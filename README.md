@@ -20,6 +20,8 @@ Edit [inventory.ini](inventory.ini) with your desired setup:
 - `ctf_subnet` 
   - The VPN subnet
 
+If you want to use your own keys, add them to the `ctf_wg_server_*` variables.
+
 Then, execute the playbook:
 ```bash
 ./setup-proxy.sh

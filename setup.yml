@@ -46,34 +46,42 @@
         state: directory
         mode: "0755"
 
+    - name: Check if WireGuard keys are provided by user
+      set_fact:
+        wg_user_keys: >-
+          {{ ctf_wg_server_privkey|length > 0
+          and ctf_wg_server_pubkey|length > 0
+          and ctf_wg_client_privkey|length > 0
+          and ctf_wg_client_pubkey|length > 0 }}
+
     - name: Check if WireGuard profile already created
+      when: not wg_user_keys
       stat:
         path: wireguard/wg-server.conf
       register: wg_status
 
-    - name: Create WireGuard profile
-      when: not wg_status.stat.exists
+    - name: Generate WireGuard keys
+      when: not wg_user_keys and not wg_status.stat.exists
       block:
-        - name: Generate WireGuard keys
-          block:
-            - shell: wg genkey
-              register: ctf_wg_server_privkey
-            - shell: echo {{ ctf_wg_server_privkey.stdout }} | wg pubkey
-              register: ctf_wg_server_pubkey
-            - shell: wg genkey
-              register: ctf_wg_client_privkey
-            - shell: echo {{ ctf_wg_client_privkey.stdout }} | wg pubkey
-              register: ctf_wg_client_pubkey
-            - set_fact:
-                ctf_wg_server_privkey: "{{ ctf_wg_server_privkey.stdout }}"
-                ctf_wg_server_pubkey: "{{ ctf_wg_server_pubkey.stdout }}"
-                ctf_wg_client_privkey: "{{ ctf_wg_client_privkey.stdout }}"
-                ctf_wg_client_pubkey: "{{ ctf_wg_client_pubkey.stdout }}"
+        - shell: wg genkey
+          register: ctf_wg_server_gen_privkey
+        - shell: echo {{ ctf_wg_server_privkey.stdout }} | wg pubkey
+          register: ctf_wg_server_gen_pubkey
+        - shell: wg genkey
+          register: ctf_wg_client_gen_privkey
+        - shell: echo {{ ctf_wg_client_privkey.stdout }} | wg pubkey
+          register: ctf_wg_client_gen_pubkey
+        - set_fact:
+            ctf_wg_server_privkey: "{{ ctf_wg_server_gen_privkey.stdout }}"
+            ctf_wg_server_pubkey: "{{ ctf_wg_server_gen_pubkey.stdout }}"
+            ctf_wg_client_privkey: "{{ ctf_wg_client_gen_privkey.stdout }}"
+            ctf_wg_client_pubkey: "{{ ctf_wg_client_gen_pubkey.stdout }}"
 
-        - name: Update profile
-          template:
-            src: docker/wg-server.conf
-            dest: wireguard/wg-server.conf
+    - name: Update WireGuard profile
+      when: wg_user_keys or not wg_status.stat.exists
+      template:
+        src: docker/wg-server.conf
+        dest: wireguard/wg-server.conf
 
     - name: Update Docker configuration
       template:
@@ -92,7 +100,7 @@
 
     - name: Generate client profile in "wg-client.conf"
       delegate_to: "localhost"
-      when: not wg_status.stat.exists
+      when: wg_user_keys or not wg_status.stat.exists
       template:
         src: templates/wg-client.conf
         dest: wg-client.conf
