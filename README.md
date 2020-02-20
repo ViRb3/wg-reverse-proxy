@@ -8,11 +8,17 @@
 
 ## Usage
 Edit [inventory.ini](inventory.ini) with your desired setup:
-- `ctf_wg_port` - The port WireGuard will listen on
-- `ctf_reverse_ports` - The ports that will be forwarded to the client. Parsed by `iptables` rule: `-m multiport --dports <ctf_reverse_ports>`
-- `ctf_client_ip` - The VPN client IP
-- `ctf_server_ip` - The VPN server IP
-- `ctf_subnet` - The VPN subnet
+- `ctf_wg_port` 
+  - The port WireGuard will listen on
+- `ctf_reverse_ports`
+  - The ports that will be forwarded to the client
+  - Parsed by `iptables` rule: `-m multiport --dports <ctf_reverse_ports>`
+- `ctf_client_ip`
+  - The VPN client IP
+- `ctf_server_ip` 
+  - The VPN server IP
+- `ctf_subnet` 
+  - The VPN subnet
 
 Then, execute the playbook:
 ```bash
