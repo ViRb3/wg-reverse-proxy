@@ -22,7 +22,7 @@ Edit [inventory.ini](inventory.ini) with your desired setup:
 - `ctf_keep_existing_profile`
   - Whether to keep existing WireGuard profile if one exists
 
-If you want to use your own keys, add them to the `ctf_server_*` variables.
+If you want to use your own keys, add them to the `ctf_*_*key` variables.
 Otherwise, leave them empty and the Ansible script will generate new ones for you.
 
 Then, execute the playbook:
