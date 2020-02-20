@@ -13,7 +13,7 @@
       vars:
         ansible_become: yes
         # eoan is not supported yet, so use bionic as workaround
-        docker_apt_repository: "deb [arch={{ docker_apt_arch }}] https://download.docker.com/linux/ubuntu bionic {{ docker_apt_release_channel }}"
+        docker_apt_repository: deb [arch={{ docker_apt_arch }}] https://download.docker.com/linux/ubuntu bionic {{ docker_apt_release_channel }}
       when:
         - docker_exists.rc != 0
 
@@ -99,7 +99,7 @@
       become: yes
 
     - name: Generate client profile in "wg-client.conf"
-      delegate_to: "localhost"
+      delegate_to: localhost
       when: wg_user_keys or not wg_status.stat.exists
       template:
         src: templates/wg-client.conf
