@@ -49,27 +49,27 @@
     - name: Check if WireGuard keys are provided by user
       set_fact:
         wg_user_keys: >-
-          {{ ctf_wg_server_privkey|length > 0
-          and ctf_wg_server_pubkey|length > 0
-          and ctf_wg_client_privkey|length > 0
-          and ctf_wg_client_pubkey|length > 0 }}
+          {{ ctf_server_privkey|length > 0
+          and ctf_server_pubkey|length > 0
+          and ctf_client_privkey|length > 0
+          and ctf_client_pubkey|length > 0 }}
 
     - name: Generate WireGuard keys
       when: not wg_user_keys
       block:
         - shell: wg genkey
-          register: ctf_wg_server_gen_privkey
-        - shell: echo {{ ctf_wg_server_gen_privkey.stdout }} | wg pubkey
-          register: ctf_wg_server_gen_pubkey
+          register: ctf_server_gen_privkey
+        - shell: echo {{ ctf_server_gen_privkey.stdout }} | wg pubkey
+          register: ctf_server_gen_pubkey
         - shell: wg genkey
-          register: ctf_wg_client_gen_privkey
-        - shell: echo {{ ctf_wg_client_gen_privkey.stdout }} | wg pubkey
-          register: ctf_wg_client_gen_pubkey
+          register: ctf_client_gen_privkey
+        - shell: echo {{ ctf_client_gen_privkey.stdout }} | wg pubkey
+          register: ctf_client_gen_pubkey
         - set_fact:
-            ctf_wg_server_privkey: "{{ ctf_wg_server_gen_privkey.stdout }}"
-            ctf_wg_server_pubkey: "{{ ctf_wg_server_gen_pubkey.stdout }}"
-            ctf_wg_client_privkey: "{{ ctf_wg_client_gen_privkey.stdout }}"
-            ctf_wg_client_pubkey: "{{ ctf_wg_client_gen_pubkey.stdout }}"
+            ctf_server_privkey: "{{ ctf_server_gen_privkey.stdout }}"
+            ctf_server_pubkey: "{{ ctf_server_gen_pubkey.stdout }}"
+            ctf_client_privkey: "{{ ctf_client_gen_privkey.stdout }}"
+            ctf_client_pubkey: "{{ ctf_client_gen_pubkey.stdout }}"
 
     - name: Check if WireGuard profile already created
       stat:
@@ -77,7 +77,7 @@
       register: wg_exists_status
 
     - name: Create WireGuard profile
-      when: (not wg_exists_status.stat.exists) or (not ctf_wg_keep_existing_profile)
+      when: (not wg_exists_status.stat.exists) or (not ctf_keep_existing_profile)
       template:
         src: docker/wg-server.conf
         dest: wireguard/wg-server.conf
@@ -99,7 +99,7 @@
 
     - name: Generate client profile in "wg-client.conf"
       delegate_to: localhost
-      when: (not wg_exists_status.stat.exists) or (not ctf_wg_keep_existing_profile)
+      when: (not wg_exists_status.stat.exists) or (not ctf_keep_existing_profile)
       template:
         src: templates/wg-client.conf
         dest: wg-client.conf

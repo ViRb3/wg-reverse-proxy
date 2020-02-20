@@ -19,10 +19,10 @@ Edit [inventory.ini](inventory.ini) with your desired setup:
   - The VPN server IP
 - `ctf_subnet` 
   - The VPN subnet
-- `ctf_wg_keep_existing_profile`
+- `ctf_keep_existing_profile`
   - Whether to keep existing WireGuard profile if one exists
 
-If you want to use your own keys, add them to the `ctf_wg_server_*` variables.
+If you want to use your own keys, add them to the `ctf_server_*` variables.
 Otherwise, leave them empty and the Ansible script will generate new ones for you.
 
 Then, execute the playbook:
