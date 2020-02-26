@@ -7,26 +7,11 @@
 - Painless reverse shells in [CTF](https://ctf101.org/) competitions
 
 ## Usage
-Edit [inventory.ini](inventory.ini) with your desired setup:
-- `ctf_wg_port` 
-  - The port WireGuard will listen on
-- `ctf_reverse_ports`
-  - The ports that will be forwarded to the client
-  - Parsed by `iptables` rule: `-m multiport --dports <ctf_reverse_ports>`
-- `ctf_client_ip`
-  - The VPN client IP
-- `ctf_server_ip` 
-  - The VPN server IP
-- `ctf_subnet` 
-  - The VPN subnet
-- `ctf_keep_existing_profile`
-  - Whether to keep existing WireGuard profile if one exists
-
-If you want to use your own keys, add them to the `ctf_*_*key` variables.
-Otherwise, leave them empty and the Ansible script will generate new ones for you.
+Edit [inventory.ini](inventory.ini) with your desired setup.
 
 Then, execute the playbook:
 ```bash
 ./setup-proxy.sh
 ```
+
 The WireGuard client profile will be saved under `wg-client.conf`.
